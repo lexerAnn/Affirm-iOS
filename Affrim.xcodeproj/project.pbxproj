@@ -19,6 +19,9 @@
 		A1B2C3E12E4B55BB00253FD8 /* CategoriesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3E02E4B55BB00253FD8 /* CategoriesViewController.swift */; };
 		A1B2C3E32E4B56CC00253FD8 /* DailyGoalsWelcomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3E22E4B56CC00253FD8 /* DailyGoalsWelcomeViewController.swift */; };
 		A1B2C3E52E4B56DD00253FD8 /* SetupGoalsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3E42E4B56DD00253FD8 /* SetupGoalsViewController.swift */; };
+		A1B2C3F12E4B57AA00253FD8 /* AudioTranscriptionRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3F02E4B57AA00253FD8 /* AudioTranscriptionRepository.swift */; };
+		A1B2C3F32E4B57BB00253FD8 /* AudioAffirmationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3F22E4B57BB00253FD8 /* AudioAffirmationViewModel.swift */; };
+		A1B2C3F52E4B57CC00253FD8 /* HighlightedTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3F42E4B57CC00253FD8 /* HighlightedTextView.swift */; };
 
 		9F99F2A22E4B51CC00253FD8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9F99F2A12E4B51CC00253FD8 /* Assets.xcassets */; };
 		9F99F2A52E4B51CC00253FD8 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9F99F2A32E4B51CC00253FD8 /* LaunchScreen.storyboard */; };
@@ -38,6 +41,9 @@
 		A1B2C3E02E4B55BB00253FD8 /* CategoriesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoriesViewController.swift; sourceTree = "<group>"; };
 		A1B2C3E22E4B56CC00253FD8 /* DailyGoalsWelcomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyGoalsWelcomeViewController.swift; sourceTree = "<group>"; };
 		A1B2C3E42E4B56DD00253FD8 /* SetupGoalsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupGoalsViewController.swift; sourceTree = "<group>"; };
+		A1B2C3F02E4B57AA00253FD8 /* AudioTranscriptionRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioTranscriptionRepository.swift; sourceTree = "<group>"; };
+		A1B2C3F22E4B57BB00253FD8 /* AudioAffirmationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAffirmationViewModel.swift; sourceTree = "<group>"; };
+		A1B2C3F42E4B57CC00253FD8 /* HighlightedTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightedTextView.swift; sourceTree = "<group>"; };
 
 		9F99F2A12E4B51CC00253FD8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9F99F2A42E4B51CC00253FD8 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -85,6 +91,8 @@
 				A1B2C3E42E4B56DD00253FD8 /* SetupGoalsViewController.swift */,
 			A1B2C3DD2E4B54FF00253FD8 /* Models */,
 				A1B2C3DE2E4B550000253FD8 /* Views */,
+				A1B2C3F62E4B57DD00253FD8 /* ViewModels */,
+				A1B2C3F72E4B57EE00253FD8 /* Repository */,
 				9F99F2A12E4B51CC00253FD8 /* Assets.xcassets */,
 				9F99F2A32E4B51CC00253FD8 /* LaunchScreen.storyboard */,
 				9F99F2A62E4B51CC00253FD8 /* Info.plist */,
@@ -105,8 +113,25 @@
 				isa = PBXGroup;
 				children = (
 					A1B2C3DB2E4B53EE00253FD8 /* AffirmationListView.swift */,
+					A1B2C3F42E4B57CC00253FD8 /* HighlightedTextView.swift */,
 				);
 				path = Views;
+				sourceTree = "<group>";
+			};
+			A1B2C3F62E4B57DD00253FD8 /* ViewModels */ = {
+				isa = PBXGroup;
+				children = (
+					A1B2C3F22E4B57BB00253FD8 /* AudioAffirmationViewModel.swift */,
+				);
+				path = ViewModels;
+				sourceTree = "<group>";
+			};
+			A1B2C3F72E4B57EE00253FD8 /* Repository */ = {
+				isa = PBXGroup;
+				children = (
+					A1B2C3F02E4B57AA00253FD8 /* AudioTranscriptionRepository.swift */,
+				);
+				path = Repository;
 				sourceTree = "<group>";
 			};
 /* End PBXGroup section */
@@ -189,6 +214,9 @@
 				A1B2C3E12E4B55BB00253FD8 /* CategoriesViewController.swift in Sources */,
 				A1B2C3E32E4B56CC00253FD8 /* DailyGoalsWelcomeViewController.swift in Sources */,
 				A1B2C3E52E4B56DD00253FD8 /* SetupGoalsViewController.swift in Sources */,
+				A1B2C3F12E4B57AA00253FD8 /* AudioTranscriptionRepository.swift in Sources */,
+				A1B2C3F32E4B57BB00253FD8 /* AudioAffirmationViewModel.swift in Sources */,
+				A1B2C3F52E4B57CC00253FD8 /* HighlightedTextView.swift in Sources */,
 				9F99F2992E4B51CA00253FD8 /* AppDelegate.swift in Sources */,
 				9F99F29B2E4B51CA00253FD8 /* SceneDelegate.swift in Sources */,
 			);

@@ -6,12 +6,15 @@
 //
 
 import UIKit
+import Combine
 
 class AffirmationListView: UIView {
     
     // MARK: - Properties
     private var affirmations: [AffirmationModel] = []
     private var currentIndex = 0
+    private var viewModel = AudioAffirmationViewModel()
+    private var cancellables = Set<AnyCancellable>()
     
     // MARK: - UI Components
     private lazy var collectionView: UICollectionView = {
@@ -36,12 +39,14 @@ class AffirmationListView: UIView {
         super.init(frame: frame)
         setupUI()
         loadData()
+        bindViewModel()
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupUI()
         loadData()
+        bindViewModel()
     }
     
     // MARK: - Setup
@@ -66,6 +71,34 @@ class AffirmationListView: UIView {
         collectionView.reloadData()
     }
     
+    private func bindViewModel() {
+        // Bind recording state to update microphone icon
+        viewModel.$isRecording
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isRecording in
+                self?.updateCurrentCellMicrophoneState(isRecording: isRecording)
+            }
+            .store(in: &cancellables)
+        
+        // Bind highlighted words to highlight in current cell
+        viewModel.$highlightedWords
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] words in
+                if !words.isEmpty {
+                    self?.updateCurrentCellWithHighlighting(words)
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Bind loading states
+        viewModel.$isTranscribing
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isTranscribing in
+                self?.updateCurrentCellLoadingState(isLoading: isTranscribing)
+            }
+            .store(in: &cancellables)
+    }
+    
     // MARK: - Public Methods
     func updateAffirmations(_ newAffirmations: [AffirmationModel]) {
         affirmations = newAffirmations
@@ -75,7 +108,33 @@ class AffirmationListView: UIView {
         if !affirmations.isEmpty {
             collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .left, animated: false)
             currentIndex = 0
+            viewModel.setCurrentAffirmation(affirmations[0].text)
         }
+    }
+    
+    // MARK: - Private Methods
+    private func updateCurrentCellMicrophoneState(isRecording: Bool) {
+        guard let cell = getCurrentCell() else { return }
+        cell.updateMicrophoneState(isRecording: isRecording)
+    }
+    
+    private func updateCurrentCellLoadingState(isLoading: Bool) {
+        guard let cell = getCurrentCell() else { return }
+        cell.updateLoadingState(isLoading: isLoading)
+    }
+    
+    private func updateCurrentCellWithHighlighting(_ words: [HighlightedWord]) {
+        guard let cell = getCurrentCell() else { return }
+        cell.highlightMatchedWords(words)
+    }
+    
+    private func getCurrentCell() -> AffirmationCell? {
+        let indexPath = IndexPath(item: currentIndex, section: 0)
+        return collectionView.cellForItem(at: indexPath) as? AffirmationCell
+    }
+    
+    private func microphoneButtonTapped() {
+        viewModel.toggleRecording()
     }
 }
 
@@ -88,6 +147,12 @@ extension AffirmationListView: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: AffirmationCell.identifier, for: indexPath) as! AffirmationCell
         cell.configure(with: affirmations[indexPath.item])
+        
+        // Set up microphone tap handler
+        cell.onMicrophoneTapped = { [weak self] in
+            self?.microphoneButtonTapped()
+        }
+        
         return cell
     }
 }
@@ -101,12 +166,25 @@ extension AffirmationListView: UICollectionViewDelegateFlowLayout {
 
 // MARK: - UIScrollViewDelegate
 extension AffirmationListView: UIScrollViewDelegate {
-    // Removed page control update since we no longer have page control
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        let pageIndex = Int(scrollView.contentOffset.x / scrollView.frame.width)
+        currentIndex = pageIndex
+        
+        // Set current affirmation in ViewModel and reset highlighting
+        if pageIndex < affirmations.count {
+            viewModel.setCurrentAffirmation(affirmations[pageIndex].text)
+        }
+    }
 }
 
 // MARK: - AffirmationCell
 class AffirmationCell: UICollectionViewCell {
     static let identifier = "AffirmationCell"
+    
+    // MARK: - Properties
+    var onMicrophoneTapped: (() -> Void)?
+    private var originalText: String = ""
+    private var wordLabels: [UILabel] = []
     
     // MARK: - UI Components
     private lazy var quoteImageView: UIImageView = {
@@ -127,12 +205,20 @@ class AffirmationCell: UICollectionViewCell {
         return label
     }()
     
-    private lazy var microphoneImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "mic.fill")
-        imageView.tintColor = .label
-        imageView.contentMode = .scaleAspectFit
-        return imageView
+    private lazy var microphoneButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(systemName: "mic.fill"), for: .normal)
+        button.tintColor = .label
+        button.contentMode = .scaleAspectFit
+        button.addTarget(self, action: #selector(microphoneButtonTapped), for: .touchUpInside)
+        return button
+    }()
+    
+    private lazy var loadingIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .medium)
+        indicator.hidesWhenStopped = true
+        indicator.color = .systemBlue
+        return indicator
     }()
     
     private lazy var stackView: UIStackView = {
@@ -160,13 +246,15 @@ class AffirmationCell: UICollectionViewCell {
         backgroundColor = .systemBackground
         
         contentView.addSubview(stackView)
+        contentView.addSubview(loadingIndicator)
         
         // Add arranged subviews
         stackView.addArrangedSubview(quoteImageView)
         stackView.addArrangedSubview(affirmationLabel)
-        stackView.addArrangedSubview(microphoneImageView)
+        stackView.addArrangedSubview(microphoneButton)
         
         stackView.translatesAutoresizingMaskIntoConstraints = false
+        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
             // Stack view constraints
@@ -179,19 +267,109 @@ class AffirmationCell: UICollectionViewCell {
             quoteImageView.widthAnchor.constraint(equalToConstant: 40),
             quoteImageView.heightAnchor.constraint(equalToConstant: 40),
             
-            // Microphone image constraints
-            microphoneImageView.widthAnchor.constraint(equalToConstant: 60),
-            microphoneImageView.heightAnchor.constraint(equalToConstant: 60)
+            // Microphone button constraints
+            microphoneButton.widthAnchor.constraint(equalToConstant: 60),
+            microphoneButton.heightAnchor.constraint(equalToConstant: 60),
+            
+            // Loading indicator constraints (overlay on text)
+            loadingIndicator.centerXAnchor.constraint(equalTo: affirmationLabel.centerXAnchor),
+            loadingIndicator.centerYAnchor.constraint(equalTo: affirmationLabel.centerYAnchor)
         ])
     }
     
     // MARK: - Configuration
     func configure(with affirmation: AffirmationModel) {
+        originalText = affirmation.text
         affirmationLabel.text = affirmation.text
+        
+        // Reset states
+        updateMicrophoneState(isRecording: false)
+        updateLoadingState(isLoading: false)
+        resetHighlighting()
+    }
+    
+    // MARK: - Public Methods
+    func updateMicrophoneState(isRecording: Bool) {
+        UIView.animate(withDuration: 0.3) {
+            if isRecording {
+                self.microphoneButton.setImage(UIImage(systemName: "stop.circle.fill"), for: .normal)
+                self.microphoneButton.tintColor = .systemRed
+                self.microphoneButton.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
+            } else {
+                self.microphoneButton.setImage(UIImage(systemName: "mic.fill"), for: .normal)
+                self.microphoneButton.tintColor = .label
+                self.microphoneButton.transform = CGAffineTransform.identity
+            }
+        }
+    }
+    
+    func updateLoadingState(isLoading: Bool) {
+        if isLoading {
+            loadingIndicator.startAnimating()
+            // Keep text completely normal - no dimming or fading
+        } else {
+            loadingIndicator.stopAnimating()
+        }
+        // Text always stays at full opacity and normal appearance
+        affirmationLabel.alpha = 1.0
+    }
+    
+    func highlightMatchedWords(_ words: [HighlightedWord]) {
+        // Create attributed string with highlighting for matched words only
+        let attributedString = NSMutableAttributedString(string: originalText)
+        
+        // Default attributes - keep original text appearance
+        let defaultAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 24, weight: .medium),
+            .foregroundColor: UIColor.label
+        ]
+        attributedString.addAttributes(defaultAttributes, range: NSRange(location: 0, length: originalText.count))
+        
+        // Find and highlight ONLY matched words - leave unmatched words unchanged
+        let originalWords = originalText.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
+        var currentIndex = 0
+        
+        for (wordIndex, highlightedWord) in words.enumerated() {
+            if wordIndex < originalWords.count {
+                let wordToFind = originalWords[wordIndex]
+                let wordRange = (originalText as NSString).range(of: wordToFind, options: [], range: NSRange(location: currentIndex, length: originalText.count - currentIndex))
+                
+                if wordRange.location != NSNotFound {
+                    // ONLY highlight matched words that are also highlighted
+                    if highlightedWord.isMatched && highlightedWord.isHighlighted {
+                        // Highlight matched words with blue background
+                        let highlightAttributes: [NSAttributedString.Key: Any] = [
+                            .backgroundColor: UIColor.systemBlue,
+                            .foregroundColor: UIColor.white,
+                            .font: UIFont.systemFont(ofSize: 24, weight: .bold)
+                        ]
+                        attributedString.addAttributes(highlightAttributes, range: wordRange)
+                    }
+                    // Do NOT change unmatched words - they keep original appearance
+                    currentIndex = wordRange.location + wordRange.length
+                }
+            }
+        }
+        
+        affirmationLabel.attributedText = attributedString
+    }
+    
+    func resetHighlighting() {
+        affirmationLabel.attributedText = nil
+        affirmationLabel.text = originalText
+    }
+    
+    // MARK: - Actions
+    @objc private func microphoneButtonTapped() {
+        onMicrophoneTapped?()
     }
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        affirmationLabel.text = nil
+        originalText = ""
+        resetHighlighting()
+        updateMicrophoneState(isRecording: false)
+        updateLoadingState(isLoading: false)
+        onMicrophoneTapped = nil
     }
 }
