@@ -49,7 +49,7 @@ struct AffirmationResponse: Codable {
 class AudioTranscriptionRepository: NSObject, ObservableObject {
     
     // MARK: - Properties
-    private let openAIApiKey = "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"
+    private let openAIApiKey = ""
     
     private var audioRecorder: AVAudioRecorder?
     private var audioSession: AVAudioSession = AVAudioSession.sharedInstance()
