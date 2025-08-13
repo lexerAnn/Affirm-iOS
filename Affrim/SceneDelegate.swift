@@ -13,10 +13,57 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
-        // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
-        // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
-        guard let _ = (scene as? UIWindowScene) else { return }
+        // Create window programmatically
+        guard let windowScene = (scene as? UIWindowScene) else { return }
+        
+        window = UIWindow(windowScene: windowScene)
+        
+        // Create and set the root view controller with tab bar
+        let tabBarController = createTabBarController()
+        window?.rootViewController = tabBarController
+        window?.makeKeyAndVisible()
+    }
+    
+    private func createTabBarController() -> UITabBarController {
+        let tabBarController = UITabBarController()
+        
+        // Create Home View Controller
+        let homeVC = HomeViewController()
+        homeVC.tabBarItem = UITabBarItem(
+            title: "Home",
+            image: UIImage(systemName: "house"),
+            selectedImage: UIImage(systemName: "house.fill")
+        )
+        
+        // Create Stats View Controller
+        let statsVC = StatsViewController()
+        statsVC.tabBarItem = UITabBarItem(
+            title: "Stats",
+            image: UIImage(systemName: "chart.bar"),
+            selectedImage: UIImage(systemName: "chart.bar.fill")
+        )
+        
+        // Create Settings View Controller
+        let settingsVC = SettingsViewController()
+        settingsVC.tabBarItem = UITabBarItem(
+            title: "Settings",
+            image: UIImage(systemName: "gearshape"),
+            selectedImage: UIImage(systemName: "gearshape.fill")
+        )
+        
+        // Wrap each in navigation controllers for better navigation
+        let homeNavController = UINavigationController(rootViewController: homeVC)
+        let statsNavController = UINavigationController(rootViewController: statsVC)
+        let settingsNavController = UINavigationController(rootViewController: settingsVC)
+        
+        // Set view controllers
+        tabBarController.viewControllers = [homeNavController, statsNavController, settingsNavController]
+        
+        // Customize tab bar appearance
+        tabBarController.tabBar.tintColor = .systemBlue
+        tabBarController.tabBar.unselectedItemTintColor = .systemGray
+        
+        return tabBarController
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
