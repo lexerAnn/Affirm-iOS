@@ -49,7 +49,7 @@ struct AffirmationResponse: Codable {
 class AudioTranscriptionRepository: NSObject, ObservableObject {
     
     // MARK: - Properties
-    private let openAIApiKey = ""
+    private let valueData = ""
     
     private var audioRecorder: AVAudioRecorder?
     private var audioSession: AVAudioSession = AVAudioSession.sharedInstance()
@@ -166,7 +166,7 @@ class AudioTranscriptionRepository: NSObject, ObservableObject {
         let url = URL(string: "https://api.openai.com/v1/audio/transcriptions")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(openAIApiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(valueData)", forHTTPHeaderField: "Authorization")
         
         let boundary = UUID().uuidString
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
@@ -254,7 +254,7 @@ class AudioTranscriptionRepository: NSObject, ObservableObject {
         let url = URL(string: "https://api.openai.com/v1/chat/completions")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(openAIApiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(valueData)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         let prompt = createTranscriptionAffirmationPrompt(transcription: transcription)
