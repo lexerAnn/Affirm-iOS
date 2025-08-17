@@ -18,9 +18,18 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         window = UIWindow(windowScene: windowScene)
         
-        // Create and set the root view controller with tab bar
-        let tabBarController = createTabBarController()
-        window?.rootViewController = tabBarController
+        // FORCE RESET ONBOARDING FOR TESTING
+        UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
+        
+        // Check if user has completed onboarding
+        let hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+        
+        if hasCompletedOnboarding {
+            showMainApp()
+        } else {
+            showOnboarding()
+        }
+        
         window?.makeKeyAndVisible()
     }
     
@@ -64,6 +73,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         tabBarController.tabBar.unselectedItemTintColor = .systemGray
         
         return tabBarController
+    }
+    
+    // MARK: - Navigation Methods
+    func showOnboarding() {
+        let onboardingVC = OnboardingContainerViewController()
+        window?.rootViewController = onboardingVC
+    }
+    
+    func showMainApp() {
+        let tabBarController = createTabBarController()
+        window?.rootViewController = tabBarController
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
